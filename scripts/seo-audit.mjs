@@ -74,6 +74,9 @@ for (const file of htmlFiles) {
 
   if (noindex) continue;
   if (!/\bindex\b/i.test(robots) || !/\bfollow\b/i.test(robots)) failures.push(`${path}: missing index, follow`);
+  if (!html.includes("https://www.googletagmanager.com/gtag/js?id=G-HX4CBE6FVN") || !html.includes("gtag('config', 'G-HX4CBE6FVN');")) {
+    failures.push(`${path}: Google Analytics tag is missing`);
+  }
   if (canonicalMatches.length !== 1) failures.push(`${path}: expected exactly one canonical`);
   if (h1s.length !== 1) failures.push(`${path}: expected exactly one H1, found ${h1s.length}`);
   if (!title) failures.push(`${path}: title is missing`);
@@ -114,6 +117,9 @@ for (const file of htmlFiles) {
     const jsonLd = matches(html, /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi).map((match) => match[1]).join("\n");
     for (const required of ['"BlogPosting"', '"datePublished"', '"dateModified"', '"author"', '"image"', '"BreadcrumbList"']) {
       if (!jsonLd.includes(required)) failures.push(`${path}: article schema is missing ${required}`);
+    }
+    if (!/class=["'][^"']*\bauthor-box\b/i.test(html) || !/href=["']\/autora\/mariana-ribeiro\/["']/i.test(html)) {
+      failures.push(`${path}: article must include the Mariana Ribeiro author box`);
     }
   }
 
