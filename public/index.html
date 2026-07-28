@@ -35,7 +35,10 @@
             "@id": "https://calculadoradeprazo.pro/#website",
             "name": "Prazo Fácil",
             "url": "https://calculadoradeprazo.pro/",
-            "inLanguage": "pt-BR"
+            "inLanguage": "pt-BR",
+            "publisher": {
+              "@id": "https://calculadoradeprazo.pro/#organization"
+            }
           },
           {
             "@type": "Organization",
@@ -43,6 +46,24 @@
             "name": "Prazo Fácil",
             "url": "https://calculadoradeprazo.pro/",
             "logo": "https://calculadoradeprazo.pro/assets/logo.svg"
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://calculadoradeprazo.pro/#webpage",
+            "url": "https://calculadoradeprazo.pro/",
+            "name": "Calculadora de Prazo Processual Grátis | Prazo Fácil",
+            "description": "Calcule prazos processuais em dias úteis ou corridos, com feriados e suspensões.",
+            "dateModified": "2026-07-28",
+            "inLanguage": "pt-BR",
+            "isPartOf": {
+              "@id": "https://calculadoradeprazo.pro/#website"
+            },
+            "about": {
+              "@id": "https://calculadoradeprazo.pro/#app"
+            },
+            "mainEntity": {
+              "@id": "https://calculadoradeprazo.pro/#app"
+            }
           },
           {
             "@type": "SoftwareApplication",
@@ -53,6 +74,17 @@
             "operatingSystem": "Any browser",
             "browserRequirements": "Requires JavaScript",
             "inLanguage": "pt-BR",
+            "description": "Calculadora gratuita de prazos processuais com dias úteis, dias corridos, feriados nacionais, estaduais e municipais cadastrados e memória de cálculo.",
+            "provider": {
+              "@id": "https://calculadoradeprazo.pro/#organization"
+            },
+            "featureList": [
+              "Contagem em dias úteis ou corridos",
+              "Feriados nacionais e estaduais automáticos",
+              "Feriados municipais cadastrados para capitais",
+              "Suspensão de prazos de 20 de dezembro a 20 de janeiro",
+              "Detalhamento dia a dia"
+            ],
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -84,7 +116,7 @@
                 "name": "A calculadora considera feriados locais?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "A ferramenta aplica feriados nacionais e permite adicionar manualmente feriados locais e suspensões específicos do tribunal."
+                  "text": "A ferramenta aplica feriados nacionais, estaduais cadastrados e datas municipais verificadas para as capitais. Outros feriados forenses, pontos facultativos e suspensões específicas devem ser confirmados no calendário oficial do tribunal e adicionados manualmente."
                 }
               },
               {

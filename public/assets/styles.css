@@ -1139,6 +1139,10 @@ footer { padding: 58px 0 20px; background: #f3f0e9; }
 .contact-status.success { color: #175c47; background: #e3f4ec; }
 .contact-status.error { color: #8a2f27; background: #fff0ed; }
 .contact-privacy { margin: 12px 0 0; color: #82908b; font-size: 10px; text-align: center; }
+.error-hero { min-height: calc(100vh - 78px); padding-bottom: 90px; }
+.error-code { margin-bottom: 8px !important; color: var(--coral-dark) !important; font-size: 18px !important; font-weight: 850; }
+.error-actions { display: flex; justify-content: center; gap: 12px; margin-top: 28px; }
+.error-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; text-decoration: none; }
 
 @media (max-width: 800px) {
   .container { width: min(calc(100% - 28px), var(--container)); }

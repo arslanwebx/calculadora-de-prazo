@@ -166,6 +166,7 @@ try {
         for (let i = 0; i < 40 && document.querySelector('#contact-form')?.dataset.ready !== 'true'; i++) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
+        const nativeFetch = window.fetch.bind(window);
         let request;
         window.fetch = async (url, options) => {
           request = { url, options };
@@ -189,11 +190,13 @@ try {
         document.querySelector('#contact-message').value = 'Esta mensagem deve ser preservada.';
         document.querySelector('#contact-form').requestSubmit();
         await new Promise(resolve => setTimeout(resolve, 100));
-        return {
+        const result = {
           success,
           failureStatus: document.querySelector('#contact-status').textContent,
           failureMessage: document.querySelector('#contact-message').value
         };
+        window.fetch = nativeFetch;
+        return result;
       })()
     `,
     awaitPromise: true,
@@ -216,7 +219,33 @@ try {
     throw new Error("Contact failure behavior failed");
   }
 
-  console.log("Browser calculator and AJAX contact-form checks passed.");
+  const notFoundResponse = await call("Runtime.evaluate", {
+    expression: `
+      fetch('/pagina-que-nao-existe/')
+        .then(async response => ({
+          status: response.status,
+          robots: response.headers.get('x-robots-tag'),
+          html: await response.text()
+        }))
+    `,
+    awaitPromise: true,
+    returnByValue: true
+  });
+  const notFound = notFoundResponse.result.value;
+  if (notFound.status !== 404 ||
+      !notFound.robots?.includes("noindex") ||
+      !notFound.html.includes('<meta name="robots" content="noindex, follow">') ||
+      notFound.html.includes('rel="canonical"')) {
+    throw new Error(`Custom 404 indexability behavior failed: ${JSON.stringify({
+      status: notFound.status,
+      robots: notFound.robots,
+      hasMetaNoindex: notFound.html.includes('<meta name="robots" content="noindex, follow">'),
+      hasCanonical: notFound.html.includes('rel="canonical"'),
+      bodyStart: notFound.html.slice(0, 80)
+    })}`);
+  }
+
+  console.log("Browser calculator, AJAX contact-form, responsive layout, and 404 checks passed.");
   socket.close();
 } finally {
   browser.kill();

@@ -23,8 +23,11 @@ createServer(async (request, response) => {
     response.writeHead(200, { "content-type": types[extname(file)] || "application/octet-stream" });
     response.end(await readFile(file));
   } catch {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    response.end("Not found");
+    response.writeHead(404, {
+      "content-type": "text/html; charset=utf-8",
+      "x-robots-tag": "noindex, follow"
+    });
+    response.end(await readFile(join(root, "404.html")));
   }
 }).listen(4173, "127.0.0.1", () => {
   console.log("Preview: http://127.0.0.1:4173/");

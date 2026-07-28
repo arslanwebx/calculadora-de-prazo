@@ -15,7 +15,7 @@ for (const text of required) {
   if (!html.includes(text)) throw new Error(`Missing required output: ${text}`);
 }
 
-for (const file of ["robots.txt", "sitemap.xml", ".htaccess", "_headers", "assets/logo.svg", "assets/og-image.png", "assets/app.js", "assets/holiday-data.js", "assets/contact.js", "assets/data/states.json", "assets/data/municipalities.json", "assets/data/tribunals.json", "assets/data/calculator-data-manifest.json", "contato/index.html"]) {
+for (const file of ["robots.txt", "sitemap.xml", ".htaccess", "_headers", "_redirects", "404.html", "assets/logo.svg", "assets/og-image.png", "assets/app.js", "assets/holiday-data.js", "assets/contact.js", "assets/data/states.json", "assets/data/municipalities.json", "assets/data/tribunals.json", "assets/data/calculator-data-manifest.json", "contato/index.html"]) {
   await access(new URL(`../dist/${file}`, import.meta.url));
 }
 
