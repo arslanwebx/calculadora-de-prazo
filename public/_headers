@@ -2,7 +2,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; connect-src 'self' https://formsubmit.co; form-action 'self' https://formsubmit.co; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; connect-src 'self' https://formsubmit.co https://www.google-analytics.com https://region1.google-analytics.com; form-action 'self' https://formsubmit.co; img-src 'self' data: https://www.google-analytics.com; style-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-zHKvZxiKb0RN+P0YOfrKHMDHi/g+XpDGFtx9MyLbmHQ='; base-uri 'self'; frame-ancestors 'none'
 
 /404.html
   X-Robots-Tag: noindex, follow

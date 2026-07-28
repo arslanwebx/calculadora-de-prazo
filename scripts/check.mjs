@@ -1,4 +1,5 @@
 import { readFile, access } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import vm from "node:vm";
 
 const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
@@ -32,6 +33,8 @@ const sitemap = await readFile(new URL("../dist/sitemap.xml", import.meta.url), 
 const contact = await readFile(new URL("../dist/contato/index.html", import.meta.url), "utf8");
 const contactScript = await readFile(new URL("../dist/assets/contact.js", import.meta.url), "utf8");
 const headers = await readFile(new URL("../dist/_headers", import.meta.url), "utf8");
+const apacheHeaders = await readFile(new URL("../dist/.htaccess", import.meta.url), "utf8");
+const notFound = await readFile(new URL("../dist/404.html", import.meta.url), "utf8");
 const holidaySource = await readFile(new URL("../dist/assets/holiday-data.js", import.meta.url), "utf8");
 const states = JSON.parse(await readFile(new URL("../dist/assets/data/states.json", import.meta.url), "utf8"));
 const municipalities = JSON.parse(await readFile(new URL("../dist/assets/data/municipalities.json", import.meta.url), "utf8"));
@@ -48,6 +51,27 @@ if (!contactScript.includes("https://formsubmit.co/ajax/contato@calculadoradepra
 if (!contactScript.includes('_subject: "Novo contato — Calculadora de Prazo"')) throw new Error("Wrong contact subject");
 if (!headers.includes("connect-src 'self' https://formsubmit.co") || !headers.includes("form-action 'self' https://formsubmit.co")) {
   throw new Error("FormSubmit is missing from CSP");
+}
+const analyticsId = "G-HX4CBE6FVN";
+const analyticsPages = [html, contact, notFound];
+const analyticsHashes = new Set();
+for (const page of analyticsPages) {
+  if (!page.includes(`https://www.googletagmanager.com/gtag/js?id=${analyticsId}`) ||
+      !page.includes(`gtag('config', '${analyticsId}');`)) {
+    throw new Error("Google Analytics tag is missing from a public HTML page");
+  }
+  const inline = page.match(/<script>(\s*window\.dataLayer[\s\S]*?)<\/script>/)?.[1];
+  if (!inline) throw new Error("Google Analytics inline configuration is missing");
+  analyticsHashes.add(`sha256-${createHash("sha256").update(inline).digest("base64")}`);
+}
+if (analyticsHashes.size !== 1) throw new Error("Google Analytics inline configuration differs between pages");
+const [analyticsHash] = analyticsHashes;
+for (const csp of [headers, apacheHeaders]) {
+  if (!csp.includes("https://www.googletagmanager.com") ||
+      !csp.includes("https://www.google-analytics.com") ||
+      !csp.includes(analyticsHash)) {
+    throw new Error("Google Analytics is missing from the production CSP");
+  }
 }
 if (states.length !== 27 || Object.keys(municipalities).length !== 27 || municipalityCount !== 5571) {
   throw new Error(`Incomplete locality data: ${states.length} states and ${municipalityCount} municipalities`);
