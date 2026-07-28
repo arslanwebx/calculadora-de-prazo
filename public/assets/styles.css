@@ -342,7 +342,6 @@ input:user-invalid { border-color: #b73e33; }
   color: var(--muted);
 }
 .combobox-empty { color: var(--muted); }
-.custom-unit-input { margin-top: 8px; }
 
 .calculator-data-note {
   display: flex;
@@ -428,12 +427,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 .segmented input:focus-visible + label { outline: 2px solid var(--green-700); }
 
-.advanced-options {
-  margin-top: 28px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-}
-.advanced-options summary, .calculation-details summary {
+.calculation-details summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -443,8 +437,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   font-weight: 750;
   list-style: none;
 }
-.advanced-options summary::-webkit-details-marker, .calculation-details summary::-webkit-details-marker { display: none; }
-.advanced-options summary::after, .calculation-details summary::after {
+.calculation-details summary::-webkit-details-marker { display: none; }
+.calculation-details summary::after {
   width: 7px;
   height: 7px;
   margin-left: 12px;
@@ -454,19 +448,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   transform: rotate(45deg) translateY(-2px);
   transition: transform .2s;
 }
-.advanced-options[open] summary::after, .calculation-details[open] summary::after { transform: rotate(225deg) translate(-2px, -2px); }
-.summary-hint { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 500; }
-.advanced-content {
-  padding: 20px;
-  background: #fafbf9;
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 13px 13px;
-}
-.add-date-row {
-  display: grid;
-  grid-template-columns: .9fr 1.25fr 1.1fr auto;
-  gap: 10px;
-}
+.calculation-details[open] summary::after { transform: rotate(225deg) translate(-2px, -2px); }
 .secondary-button {
   padding: 0 17px;
   color: var(--green-800);
@@ -478,60 +460,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   font-weight: 750;
 }
 .secondary-button:hover { background: var(--green-50); }
-.holiday-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.holiday-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 9px;
-  color: var(--green-900);
-  background: var(--green-100);
-  border-radius: 999px;
-  font-size: 11px;
-}
-.holiday-chip button {
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  padding: 0;
-  color: inherit;
-  background: rgba(255, 255, 255, .6);
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.check-control {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-top: 18px;
-  color: #294b43;
-  font-size: 13px;
-  font-weight: 650;
-}
-.check-control input { width: 17px; height: 17px; margin: 2px 0 0; accent-color: var(--green-800); }
-.holiday-coverage {
-  margin-top: 18px;
-  padding: 11px 13px;
-  color: var(--green-900);
-  background: var(--green-50);
-  border: 1px solid #d6e5df;
-  border-radius: 10px;
-  font-size: 11px;
-  line-height: 1.55;
-}
-.advanced-note {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-.legal-links { margin: 10px 0 0 25px; color: var(--muted); font-size: 11px; line-height: 1.55; }
-.legal-links a { color: var(--green-800); font-weight: 700; text-underline-offset: 2px; }
-.advanced-note svg, .result-warning svg {
+.result-warning svg {
   flex: 0 0 auto;
   width: 17px;
   height: 17px;
@@ -1202,7 +1131,6 @@ footer { padding: 58px 0 20px; background: #f3f0e9; }
   .form-grid { grid-template-columns: minmax(0, 1fr); min-width: 0; }
   .field, .count-field, input, select { min-width: 0; max-width: 100%; }
   .field-wide-mobile, .count-field { grid-column: auto; }
-  .add-date-row { grid-template-columns: 1fr; }
   .secondary-button { height: 44px; }
   .result-stats { grid-template-columns: 1fr; }
   .result-stats div { display: flex; gap: 9px; align-items: baseline; }

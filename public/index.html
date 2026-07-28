@@ -110,7 +110,7 @@
                 "name": "Como contar um prazo processual em dias úteis?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Na contagem em dias úteis, exclui-se o dia do começo e inclui-se o dia do vencimento. Sábados, domingos, feriados e suspensões informadas não entram na contagem."
+                  "text": "Na contagem em dias úteis, exclui-se o dia do começo e inclui-se o dia do vencimento. Sábados, domingos, feriados e suspensões legais aplicáveis não entram na contagem."
                 }
               },
               {
@@ -126,7 +126,7 @@
                 "name": "A calculadora considera feriados locais?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "A ferramenta aplica feriados nacionais, estaduais cadastrados e datas municipais verificadas para as capitais. Outros feriados forenses, pontos facultativos e suspensões específicas devem ser confirmados no calendário oficial do tribunal e adicionados manualmente."
+                  "text": "A ferramenta aplica automaticamente feriados nacionais, estaduais, datas municipais cadastradas e o calendário forense padrão conforme a localidade e o tribunal selecionados."
                 }
               },
               {
@@ -265,14 +265,6 @@
                   </select>
                 </div>
 
-                <div class="field">
-                  <label for="court-unit">Vara / Unidade Judiciária</label>
-                  <select id="court-unit" name="courtUnit" disabled required>
-                    <option value="">Selecione matéria e tribunal...</option>
-                  </select>
-                  <input id="custom-court-unit" class="custom-unit-input" type="text" maxlength="120" placeholder="Digite a unidade judiciária" aria-label="Outra Vara ou Unidade Judiciária" hidden>
-                </div>
-
                 <div class="field field-wide-mobile">
                   <label for="start-date">Data da Publicação</label>
                   <div class="input-with-icon">
@@ -303,48 +295,8 @@
 
               <div class="calculator-data-note">
                 <svg aria-hidden="true"><use href="#info"></use></svg>
-                <span><strong>5.571 municípios</strong> do cadastro oficial do IBGE, feriados nacionais e estaduais automáticos e calendários municipais verificados para as capitais.</span>
+                <span><strong>5.571 municípios</strong> do cadastro oficial do IBGE, com feriados nacionais, estaduais e calendário forense padrão aplicados automaticamente.</span>
               </div>
-
-              <details class="advanced-options">
-                <summary>
-                  <span>Feriados locais e outras opções</span>
-                  <span class="summary-hint">Opcional</span>
-                </summary>
-                <div class="advanced-content">
-                  <div class="field custom-holidays">
-                    <label for="custom-holiday">Adicionar feriado ou suspensão</label>
-                    <div class="add-date-row">
-                      <input id="custom-holiday" type="date">
-                      <input id="custom-label" type="text" maxlength="48" placeholder="Ex.: feriado municipal">
-                      <select id="custom-date-type" aria-label="Tipo da data adicionada">
-                        <option value="holiday">Feriado / sem expediente</option>
-                        <option value="suspension">Suspensão do prazo</option>
-                      </select>
-                      <button id="add-holiday" class="secondary-button" type="button">Adicionar</button>
-                    </div>
-                    <div id="holiday-chips" class="holiday-chips" aria-live="polite"></div>
-                  </div>
-                  <label class="check-control">
-                    <input id="court-recess" name="courtRecess" type="checkbox" checked>
-                    <span>Suspender a contagem de 20 de dezembro a 20 de janeiro</span>
-                  </label>
-                  <label class="check-control">
-                    <input id="common-court-dates" name="commonCourtDates" type="checkbox" checked>
-                    <span>Considerar dias sem expediente forense comuns: Carnaval, Paixão de Cristo e Corpus Christi</span>
-                  </label>
-                  <div id="holiday-coverage" class="holiday-coverage" aria-live="polite">
-                    Selecione o estado e o município para ver a cobertura automática.
-                  </div>
-                  <p class="advanced-note"><svg aria-hidden="true"><use href="#info"></use></svg> A base aplica feriados nacionais, feriados estaduais cadastrados e datas municipais verificadas para as capitais. Pontos facultativos e suspensões extraordinárias só entram quando marcados acima ou adicionados manualmente. Sempre confira o calendário anual do tribunal.</p>
-                  <p class="legal-links">
-                    Regras consideradas:
-                    <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm" target="_blank" rel="noopener noreferrer">CPC, arts. 219, 220 e 224</a>,
-                    <a href="https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689compilado.htm" target="_blank" rel="noopener noreferrer">CPP, arts. 798 e 798-A</a> e
-                    <a href="https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452compilado.htm" target="_blank" rel="noopener noreferrer">CLT, art. 775</a>.
-                  </p>
-                </div>
-              </details>
 
               <div id="form-error" class="form-error" role="alert" hidden></div>
               <button class="primary-button calculate-button" type="submit">
@@ -423,7 +375,7 @@
             <p>O Prazo Fácil organiza as regras básicas em uma memória de cálculo clara. Você informa o termo inicial, escolhe o tipo de contagem e adiciona os dias sem expediente que conhece.</p>
             <ol class="steps">
               <li><span>1</span><div><strong>Informe a data e o número de dias</strong><p>Use a data indicada no processo como referência inicial.</p></div></li>
-              <li><span>2</span><div><strong>Ajuste a forma de contagem</strong><p>Selecione dias úteis ou corridos e informe suspensões locais.</p></div></li>
+              <li><span>2</span><div><strong>Escolha a forma de contagem</strong><p>Selecione dias úteis ou corridos. Os feriados aplicáveis entram automaticamente.</p></div></li>
               <li><span>3</span><div><strong>Confira o vencimento</strong><p>Revise o resumo e valide o resultado no calendário oficial.</p></div></li>
             </ol>
           </div>
@@ -477,7 +429,7 @@
           <div class="faq-list">
             <details open>
               <summary>Como contar um prazo processual em dias úteis?</summary>
-              <p>Exclui-se o dia do começo e inclui-se o dia do vencimento. Sábados, domingos, feriados e suspensões informadas não entram na contagem.</p>
+              <p>Exclui-se o dia do começo e inclui-se o dia do vencimento. Sábados, domingos, feriados e suspensões legais aplicáveis não entram na contagem.</p>
             </details>
             <details>
               <summary>O dia da publicação entra na contagem?</summary>
@@ -485,7 +437,7 @@
             </details>
             <details>
               <summary>A calculadora considera feriados locais?</summary>
-              <p>A ferramenta aplica feriados nacionais, estaduais cadastrados e datas municipais verificadas para as capitais. Para outros municípios, feriados forenses, pontos facultativos e suspensões específicas, consulte o calendário oficial do tribunal e adicione a data no campo próprio.</p>
+              <p>Sim. A ferramenta aplica automaticamente feriados nacionais, estaduais, datas municipais cadastradas e o calendário forense padrão conforme a localidade e o tribunal selecionados.</p>
             </details>
             <details>
               <summary>O resultado substitui a conferência no tribunal?</summary>

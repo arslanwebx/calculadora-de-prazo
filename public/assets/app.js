@@ -11,11 +11,8 @@
   const matterSelect = document.querySelector("#case-type");
   const processSelect = document.querySelector("#process-type");
   const courtSelect = document.querySelector("#court");
-  const unitSelect = document.querySelector("#court-unit");
-  const customUnitInput = document.querySelector("#custom-court-unit");
   const result = document.querySelector("#result");
   const errorBox = document.querySelector("#form-error");
-  const customDates = new Map();
   const holidayData = window.PRAZO_HOLIDAYS || { national: [], state: {}, municipalities: {} };
 
   let municipalitiesByState = {};
@@ -84,19 +81,11 @@
     municipalityInput.value = "";
     municipalitySearch.value = "";
     selectedMunicipalityName = "";
-    updateHolidayCoverage();
     currentMunicipalities = [];
     filteredMunicipalities = [];
     municipalityList.hidden = true;
     municipalitySearch.setAttribute("aria-expanded", "false");
     resetSelect(courtSelect, "Selecione estado e município...");
-    resetUnits();
-  }
-
-  function resetUnits() {
-    resetSelect(unitSelect, "Selecione matéria e tribunal...");
-    customUnitInput.value = "";
-    customUnitInput.hidden = true;
   }
 
   stateSelect.addEventListener("change", () => {
@@ -113,7 +102,6 @@
     municipalitySearch.placeholder = "Digite para buscar...";
     document.querySelector("#municipality-help").textContent =
       `${currentMunicipalities.length.toLocaleString("pt-BR")} municípios disponíveis em ${selectedText(stateSelect)}`;
-    updateHolidayCoverage();
   });
 
   function renderMunicipalities(query = "") {
@@ -177,31 +165,7 @@
     municipalitySearch.setAttribute("aria-expanded", "false");
     municipalitySearch.removeAttribute("aria-activedescendant");
     loadTribunals();
-    updateHolidayCoverage();
     municipalitySearch.closest(".field").classList.remove("field-invalid");
-  }
-
-  function localHolidayEntries() {
-    const stateEntries = holidayData.state[stateSelect.value] || [];
-    const municipalEntries = holidayData.municipalities[`${selectedMunicipalityName}|${stateSelect.value}`] || [];
-    return { stateEntries, municipalEntries };
-  }
-
-  function updateHolidayCoverage() {
-    const coverage = document.querySelector("#holiday-coverage");
-    if (!coverage) return;
-    if (!stateSelect.value) {
-      coverage.textContent = "Selecione o estado e o município para ver a cobertura automática.";
-      return;
-    }
-    const { stateEntries, municipalEntries } = localHolidayEntries();
-    const parts = [`9 feriados nacionais`, `${stateEntries.length} estaduais`];
-    if (selectedMunicipalityName) {
-      parts.push(municipalEntries.length
-        ? `${municipalEntries.length} municipais de ${selectedMunicipalityName}`
-        : `nenhum feriado municipal pré-cadastrado para ${selectedMunicipalityName}`);
-    }
-    coverage.textContent = `Cobertura automática: ${parts.join(", ")}. ${municipalEntries.length ? "" : "Adicione as datas locais do calendário oficial do tribunal."}`.trim();
   }
 
   function loadTribunals() {
@@ -210,7 +174,6 @@
       courtSelect.add(new Option(tribunal.name, tribunal.id));
     }
     courtSelect.disabled = courtSelect.options.length <= 1;
-    resetUnits();
   }
 
   municipalitySearch.addEventListener("focus", () => {
@@ -222,7 +185,6 @@
       municipalityInput.value = "";
       selectedMunicipalityName = "";
       resetSelect(courtSelect, "Selecione o município...");
-      resetUnits();
     }
     renderMunicipalities(municipalitySearch.value);
   });
@@ -258,49 +220,8 @@
     }
   });
 
-  function getUnitOptions(tribunal, matter) {
-    if (/^(STF|STJ|TST|STM|TSE)$/.test(tribunal)) {
-      return ["Presidência", "Plenário", "Turma", "Seção", "Corte Especial", "Gabinete / Relatoria"];
-    }
-    if (tribunal.startsWith("TRT") || matter === "labor") {
-      return ["Vara do Trabalho", "CEJUSC-JT", "Turma do TRT", "Seção Especializada", "Tribunal Pleno", "Presidência / Vice-Presidência"];
-    }
-    if (tribunal.startsWith("TRF")) {
-      if (matter === "criminal") {
-        return ["Vara Federal Criminal", "Juizado Especial Federal Criminal", "Turma Recursal", "Turma do TRF", "Seção do TRF"];
-      }
-      return ["Vara Federal Cível", "Juizado Especial Federal Cível", "Vara Federal de Execuções Fiscais", "Turma Recursal", "Turma do TRF", "Seção do TRF"];
-    }
-    if (matter === "criminal") {
-      return ["Vara Criminal", "Vara do Júri", "Vara de Execuções Criminais", "Vara de Violência Doméstica e Familiar", "Juizado Especial Criminal", "Vara da Infância e Juventude", "Câmara Criminal"];
-    }
-    return ["Vara Cível", "Vara de Família e Sucessões", "Vara da Fazenda Pública", "Vara de Execuções Fiscais", "Vara Empresarial", "Vara de Registros Públicos", "Vara de Acidentes do Trabalho", "Juizado Especial Cível", "Vara da Infância e Juventude", "Câmara Cível"];
-  }
-
-  function loadUnits() {
-    const tribunal = selectedText(courtSelect);
-    const matter = matterSelect.value;
-    unitSelect.replaceChildren(new Option("Selecione...", ""));
-    if (!courtSelect.value || !matter) {
-      unitSelect.disabled = true;
-      customUnitInput.hidden = true;
-      return;
-    }
-    for (const unit of getUnitOptions(tribunal, matter)) {
-      unitSelect.add(new Option(unit, unit));
-    }
-    unitSelect.add(new Option("Outra unidade / informar manualmente", "other"));
-    unitSelect.disabled = false;
-  }
-
-  courtSelect.addEventListener("change", loadUnits);
   matterSelect.addEventListener("change", () => {
     document.querySelector(matterSelect.value === "criminal" ? "#calendar-days" : "#business").checked = true;
-    loadUnits();
-  });
-  unitSelect.addEventListener("change", () => {
-    customUnitInput.hidden = unitSelect.value !== "other";
-    if (!customUnitInput.hidden) customUnitInput.focus();
   });
 
   function easterSunday(year) {
@@ -375,18 +296,7 @@
   }
 
   function classify(date, options) {
-    const key = toKey(date);
     const weekDay = date.getUTCDay();
-    if (customDates.has(key)) {
-      const custom = customDates.get(key);
-      return {
-        blocked: true,
-        kind: custom.type === "suspension" ? "suspension" : "holiday",
-        reason: custom.label,
-        suspendsContinuous: custom.type === "suspension",
-        source: "Data adicionada manualmente"
-      };
-    }
     if (options.useRecess && isCourtRecess(date)) {
       return {
         blocked: true,
@@ -568,7 +478,7 @@
     ruleNote.className = "breakdown-rule";
     ruleNote.textContent = options.matter === "criminal"
       ? "Perfil criminal: contagem contínua conforme o CPP. Fins de semana e feriados intermediários são computados; a suspensão de 20/12 a 20/01 é aplicada, ressalvadas as exceções do art. 798-A."
-      : `Perfil ${options.matter === "labor" ? "trabalhista" : "cível"}: contam-se apenas dias úteis, excluindo dias sem expediente e suspensões selecionadas.`;
+      : `Perfil ${options.matter === "labor" ? "trabalhista" : "cível"}: contam-se apenas dias úteis, excluindo automaticamente dias sem expediente e suspensões legais aplicáveis.`;
     summary.append(heading, grid, ruleNote);
   }
 
@@ -593,10 +503,6 @@
     if (!matterSelect.value) return invalidate(matterSelect, "Selecione a Matéria.");
     if (!processSelect.value) return invalidate(processSelect, "Informe se o processo é Eletrônico ou Físico.");
     if (!courtSelect.value) return invalidate(courtSelect, "Selecione o Tribunal.");
-    if (!unitSelect.value) return invalidate(unitSelect, "Selecione a Vara ou Unidade Judiciária.");
-    if (unitSelect.value === "other" && !customUnitInput.value.trim()) {
-      return invalidate(customUnitInput, "Digite o nome da Vara ou Unidade Judiciária.");
-    }
     if (!startInput.value) return invalidate(startInput, "Informe a Data da Publicação.");
     const days = Number(daysInput.value);
     if (!Number.isInteger(days) || days < 1 || days > 365) {
@@ -612,8 +518,7 @@
       municipality: selectedMunicipalityName,
       matter: selectedText(matterSelect),
       process: selectedText(processSelect),
-      court: selectedText(courtSelect),
-      unit: unitSelect.value === "other" ? customUnitInput.value.trim() : selectedText(unitSelect)
+      court: selectedText(courtSelect)
     };
   }
 
@@ -625,8 +530,8 @@
     const start = fromKey(startInput.value);
     const mode = new FormData(form).get("countMode");
     const options = {
-      useRecess: document.querySelector("#court-recess").checked,
-      useCommonDates: document.querySelector("#common-court-dates").checked,
+      useRecess: true,
+      useCommonDates: true,
       stateCode: stateSelect.value,
       municipality: selectedMunicipalityName,
       matter: matterSelect.value,
@@ -645,7 +550,7 @@
 
     const contextBox = document.querySelector("#result-context");
     contextBox.replaceChildren();
-    [context.matter, context.process, `${context.municipality}/${context.stateCode}`, context.court, context.unit].forEach((value) => {
+    [context.matter, context.process, `${context.municipality}/${context.stateCode}`, context.court].forEach((value) => {
       const chip = document.createElement("span");
       chip.textContent = value;
       contextBox.append(chip);
@@ -653,48 +558,11 @@
     renderBreakdown(calculation, start, mode, options);
     renderTimeline(calculation.entries);
 
-    lastResultText = `Prazo Fácil: vencimento estimado em ${formatLong(calculation.dueDate)}. ${days} ${mode === "business" ? "dias úteis" : "dias corridos"}; publicação em ${formatShort(start)}; ${context.matter}; ${context.process}; ${context.municipality}/${context.stateCode}; ${context.court}; ${context.unit}. Confira no calendário oficial do tribunal.`;
+    lastResultText = `Prazo Fácil: vencimento estimado em ${formatLong(calculation.dueDate)}. ${days} ${mode === "business" ? "dias úteis" : "dias corridos"}; publicação em ${formatShort(start)}; ${context.matter}; ${context.process}; ${context.municipality}/${context.stateCode}; ${context.court}. Confira no calendário oficial do tribunal.`;
     lastCalculation = { ...calculation, context, days, mode, start };
     result.hidden = false;
     result.scrollIntoView({ behavior: "smooth", block: "center" });
   });
-
-  document.querySelector("#add-holiday").addEventListener("click", () => {
-    const dateInput = document.querySelector("#custom-holiday");
-    const labelInput = document.querySelector("#custom-label");
-    const typeInput = document.querySelector("#custom-date-type");
-    if (!dateInput.value) {
-      dateInput.focus();
-      return;
-    }
-    customDates.set(dateInput.value, {
-      label: labelInput.value.trim() || (typeInput.value === "suspension" ? "Suspensão local do prazo" : "Feriado ou dia sem expediente"),
-      type: typeInput.value
-    });
-    renderHolidayChips();
-    dateInput.value = "";
-    labelInput.value = "";
-  });
-
-  function renderHolidayChips() {
-    const container = document.querySelector("#holiday-chips");
-    container.replaceChildren();
-    for (const [date, custom] of [...customDates].sort()) {
-      const chip = document.createElement("span");
-      chip.className = "holiday-chip";
-      chip.append(document.createTextNode(`${formatShort(fromKey(date))} · ${custom.label} · ${custom.type === "suspension" ? "suspensão" : "feriado"}`));
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.setAttribute("aria-label", `Remover ${custom.label} em ${formatShort(fromKey(date))}`);
-      remove.textContent = "×";
-      remove.addEventListener("click", () => {
-        customDates.delete(date);
-        renderHolidayChips();
-      });
-      chip.append(remove);
-      container.append(chip);
-    }
-  }
 
   document.querySelector("#copy-result").addEventListener("click", async (event) => {
     if (!lastResultText) return;
@@ -723,7 +591,7 @@
       `DTSTART;VALUE=DATE:${date}`,
       `DTEND;VALUE=DATE:${end}`,
       `SUMMARY:${escapeIcs(`Vencimento de prazo — ${context.matter}`)}`,
-      `DESCRIPTION:${escapeIcs(`${days} dias. ${context.court}; ${context.unit}; ${context.municipality}/${context.stateCode}. Confira no calendário oficial.`)}`,
+      `DESCRIPTION:${escapeIcs(`${days} dias. ${context.court}; ${context.municipality}/${context.stateCode}. Confira no calendário oficial.`)}`,
       "END:VEVENT",
       "END:VCALENDAR"
     ].join("\r\n");
@@ -744,13 +612,12 @@
       daysInput.value = card.dataset.days;
       matterSelect.value = card.dataset.type;
       document.querySelector("#business").checked = true;
-      loadUnits();
       document.querySelector("#calculadora").scrollIntoView({ behavior: "smooth" });
       startInput.focus({ preventScroll: true });
     });
   });
 
-  for (const element of [stateSelect, matterSelect, processSelect, courtSelect, unitSelect, startInput, daysInput, customUnitInput]) {
+  for (const element of [stateSelect, matterSelect, processSelect, courtSelect, startInput, daysInput]) {
     element.addEventListener("change", () => element.closest(".field")?.classList.remove("field-invalid"));
   }
 

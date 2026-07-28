@@ -71,18 +71,14 @@ try {
       const court = document.querySelector('#court');
       court.selectedIndex = 1;
       court.dispatchEvent(new Event('change', { bubbles: true }));
-      const unit = document.querySelector('#court-unit');
-      unit.selectedIndex = 1;
       const run = async (start, days, mode = 'business', courtIndex = 1, matter = 'civil') => {
         document.querySelector('#case-type').value = matter;
         document.querySelector('#case-type').dispatchEvent(new Event('change', { bubbles: true }));
         court.selectedIndex = courtIndex;
         court.dispatchEvent(new Event('change', { bubbles: true }));
-        unit.selectedIndex = 1;
         document.querySelector('#start-date').value = start;
         document.querySelector('#days').value = days;
         document.querySelector(mode === 'business' ? '#business' : '#calendar-days').checked = true;
-        document.querySelector('#court-recess').checked = true;
         document.querySelector('#deadline-form').requestSubmit();
         await new Promise(resolve => setTimeout(resolve, 50));
         return {
@@ -92,8 +88,10 @@ try {
         };
       };
       return {
+        streamlinedForm: !document.querySelector('#court-unit') && !document.querySelector('.advanced-options'),
         standard: await run('2026-07-28', 15),
         nationalHoliday: await run('2026-09-04', 1),
+        commonCourtClosure: await run('2026-02-13', 1),
         stateHoliday: await run('2026-07-08', 1),
         municipalHoliday: await run('2027-01-22', 1),
         federalCourtHoliday: await run('2026-08-10', 1, 'business', 2),
@@ -114,12 +112,17 @@ try {
   const expected = {
     standard: "18 de agosto de 2026",
     nationalHoliday: "08 de setembro de 2026",
+    commonCourtClosure: "18 de fevereiro de 2026",
     stateHoliday: "10 de julho de 2026",
     municipalHoliday: "26 de janeiro de 2027",
     federalCourtHoliday: "12 de agosto de 2026",
     criminalContinuous: "08 de setembro de 2026",
     courtRecess: "21 de janeiro de 2027"
   };
+
+  if (!actual.streamlinedForm) {
+    throw new Error("Removed calculator inputs are still present");
+  }
 
   for (const [caseName, expectedDate] of Object.entries(expected)) {
     if (actual[caseName].date !== expectedDate) {
@@ -128,7 +131,8 @@ try {
   }
   if (!actual.stateHoliday.timeline.includes("Revolução Constitucionalista") ||
       !actual.municipalHoliday.timeline.includes("Aniversário de São Paulo") ||
-      !actual.federalCourtHoliday.timeline.includes("Criação dos cursos jurídicos")) {
+      !actual.federalCourtHoliday.timeline.includes("Criação dos cursos jurídicos") ||
+      !actual.commonCourtClosure.timeline.includes("Carnaval")) {
     throw new Error("Automatic holiday sources are missing from the day-by-day breakdown");
   }
   if (!actual.criminalContinuous.breakdown.includes("contagem contínua") ||
