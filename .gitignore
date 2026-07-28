@@ -4,3 +4,10 @@ homepage-*.png
 contact-*.png
 full-calculator-*.png
 .edge-*/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
