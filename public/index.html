@@ -100,6 +100,7 @@
         ]
       }
     </script>
+    <script src="/assets/holiday-data.js" defer></script>
     <script src="/assets/app.js" defer></script>
   </head>
   <body>
@@ -260,7 +261,7 @@
 
               <div class="calculator-data-note">
                 <svg aria-hidden="true"><use href="#info"></use></svg>
-                <span><strong>5.571 municípios</strong> do cadastro oficial do IBGE e tribunais filtrados por estado.</span>
+                <span><strong>5.571 municípios</strong> do cadastro oficial do IBGE, feriados nacionais e estaduais automáticos e calendários municipais verificados para as capitais.</span>
               </div>
 
               <details class="advanced-options">
@@ -274,6 +275,10 @@
                     <div class="add-date-row">
                       <input id="custom-holiday" type="date">
                       <input id="custom-label" type="text" maxlength="48" placeholder="Ex.: feriado municipal">
+                      <select id="custom-date-type" aria-label="Tipo da data adicionada">
+                        <option value="holiday">Feriado / sem expediente</option>
+                        <option value="suspension">Suspensão do prazo</option>
+                      </select>
                       <button id="add-holiday" class="secondary-button" type="button">Adicionar</button>
                     </div>
                     <div id="holiday-chips" class="holiday-chips" aria-live="polite"></div>
@@ -284,9 +289,18 @@
                   </label>
                   <label class="check-control">
                     <input id="common-court-dates" name="commonCourtDates" type="checkbox" checked>
-                    <span>Considerar suspensões móveis comuns: Carnaval, Paixão de Cristo e Corpus Christi</span>
+                    <span>Considerar dias sem expediente forense comuns: Carnaval, Paixão de Cristo e Corpus Christi</span>
                   </label>
-                  <p class="advanced-note"><svg aria-hidden="true"><use href="#info"></use></svg> Feriados nacionais e o recesso são automáticos. Adicione acima feriados estaduais, municipais ou suspensões específicas confirmadas no calendário do tribunal.</p>
+                  <div id="holiday-coverage" class="holiday-coverage" aria-live="polite">
+                    Selecione o estado e o município para ver a cobertura automática.
+                  </div>
+                  <p class="advanced-note"><svg aria-hidden="true"><use href="#info"></use></svg> A base aplica feriados nacionais, feriados estaduais cadastrados e datas municipais verificadas para as capitais. Pontos facultativos e suspensões extraordinárias só entram quando marcados acima ou adicionados manualmente. Sempre confira o calendário anual do tribunal.</p>
+                  <p class="legal-links">
+                    Regras consideradas:
+                    <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm" target="_blank" rel="noopener noreferrer">CPC, arts. 219, 220 e 224</a>,
+                    <a href="https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689compilado.htm" target="_blank" rel="noopener noreferrer">CPP, arts. 798 e 798-A</a> e
+                    <a href="https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452compilado.htm" target="_blank" rel="noopener noreferrer">CLT, art. 775</a>.
+                  </p>
                 </div>
               </details>
 
@@ -320,11 +334,15 @@
               <div id="result-context" class="result-context"></div>
               <div class="result-stats">
                 <div><strong id="stat-counted">0</strong><span>dias contados</span></div>
-                <div><strong id="stat-weekends">0</strong><span>fins de semana</span></div>
-                <div><strong id="stat-paused">0</strong><span>feriados e suspensões</span></div>
+                <div><strong id="stat-elapsed">0</strong><span>dias corridos percorridos</span></div>
+                <div><strong id="stat-excluded">0</strong><span>dias não contados</span></div>
               </div>
-              <details class="calculation-details">
-                <summary>Ver memória de cálculo</summary>
+              <div id="breakdown-summary" class="breakdown-summary"></div>
+              <details class="calculation-details" open>
+                <summary>Detalhamento dia a dia</summary>
+                <div class="timeline-head" aria-hidden="true">
+                  <span>Data</span><span>Classificação</span><span>Resultado</span>
+                </div>
                 <div id="timeline" class="timeline"></div>
               </details>
               <div class="result-warning">
@@ -345,8 +363,8 @@
           </article>
           <article>
             <span class="feature-number">02</span>
-            <h2>Feriados ajustáveis</h2>
-            <p>Inclua suspensões locais para aproximar o cálculo da realidade do processo.</p>
+            <h2>Feriados por localidade</h2>
+            <p>Aplique automaticamente datas nacionais, estaduais e municipais cadastradas, com ajuste manual para o calendário do tribunal.</p>
           </article>
           <article>
             <span class="feature-number">03</span>
@@ -425,7 +443,7 @@
             </details>
             <details>
               <summary>A calculadora considera feriados locais?</summary>
-              <p>A ferramenta aplica feriados nacionais. Feriados estaduais, municipais, forenses e suspensões específicas podem ser adicionados manualmente.</p>
+              <p>A ferramenta aplica feriados nacionais, estaduais cadastrados e datas municipais verificadas para as capitais. Para outros municípios, feriados forenses, pontos facultativos e suspensões específicas, consulte o calendário oficial do tribunal e adicione a data no campo próprio.</p>
             </details>
             <details>
               <summary>O resultado substitui a conferência no tribunal?</summary>

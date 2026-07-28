@@ -16,6 +16,7 @@
   const result = document.querySelector("#result");
   const errorBox = document.querySelector("#form-error");
   const customDates = new Map();
+  const holidayData = window.PRAZO_HOLIDAYS || { national: [], state: {}, municipalities: {} };
 
   let municipalitiesByState = {};
   let tribunalsByState = {};
@@ -83,6 +84,7 @@
     municipalityInput.value = "";
     municipalitySearch.value = "";
     selectedMunicipalityName = "";
+    updateHolidayCoverage();
     currentMunicipalities = [];
     filteredMunicipalities = [];
     municipalityList.hidden = true;
@@ -111,6 +113,7 @@
     municipalitySearch.placeholder = "Digite para buscar...";
     document.querySelector("#municipality-help").textContent =
       `${currentMunicipalities.length.toLocaleString("pt-BR")} municípios disponíveis em ${selectedText(stateSelect)}`;
+    updateHolidayCoverage();
   });
 
   function renderMunicipalities(query = "") {
@@ -174,7 +177,31 @@
     municipalitySearch.setAttribute("aria-expanded", "false");
     municipalitySearch.removeAttribute("aria-activedescendant");
     loadTribunals();
+    updateHolidayCoverage();
     municipalitySearch.closest(".field").classList.remove("field-invalid");
+  }
+
+  function localHolidayEntries() {
+    const stateEntries = holidayData.state[stateSelect.value] || [];
+    const municipalEntries = holidayData.municipalities[`${selectedMunicipalityName}|${stateSelect.value}`] || [];
+    return { stateEntries, municipalEntries };
+  }
+
+  function updateHolidayCoverage() {
+    const coverage = document.querySelector("#holiday-coverage");
+    if (!coverage) return;
+    if (!stateSelect.value) {
+      coverage.textContent = "Selecione o estado e o município para ver a cobertura automática.";
+      return;
+    }
+    const { stateEntries, municipalEntries } = localHolidayEntries();
+    const parts = [`9 feriados nacionais`, `${stateEntries.length} estaduais`];
+    if (selectedMunicipalityName) {
+      parts.push(municipalEntries.length
+        ? `${municipalEntries.length} municipais de ${selectedMunicipalityName}`
+        : `nenhum feriado municipal pré-cadastrado para ${selectedMunicipalityName}`);
+    }
+    coverage.textContent = `Cobertura automática: ${parts.join(", ")}. ${municipalEntries.length ? "" : "Adicione as datas locais do calendário oficial do tribunal."}`.trim();
   }
 
   function loadTribunals() {
@@ -294,29 +321,50 @@
     return new Date(Date.UTC(year, month - 1, day));
   }
 
-  function movableCourtDate(date) {
+  function movableCourtDate(date, federalCourt) {
     const easter = easterSunday(date.getUTCFullYear());
-    const dates = new Map([
-      [toKey(addDays(easter, -48)), "Segunda-feira de Carnaval — suspensão comum"],
-      [toKey(addDays(easter, -47)), "Terça-feira de Carnaval — suspensão comum"],
-      [toKey(addDays(easter, -2)), "Paixão de Cristo — suspensão comum"],
-      [toKey(addDays(easter, 60)), "Corpus Christi — suspensão comum"]
-    ]);
-    return dates.get(toKey(date)) || "";
+    const dates = [
+      [addDays(easter, -48), "Segunda-feira de Carnaval"],
+      [addDays(easter, -47), "Terça-feira de Carnaval"],
+      [addDays(easter, -2), "Paixão de Cristo"],
+      [addDays(easter, 60), "Corpus Christi"]
+    ];
+    if (federalCourt) {
+      dates.push(
+        [addDays(easter, -4), "Quarta-feira da Semana Santa — Justiça Federal"],
+        [addDays(easter, -3), "Quinta-feira da Semana Santa — Justiça Federal"]
+      );
+    }
+    return new Map(dates.map(([holidayDate, name]) => [toKey(holidayDate), name])).get(toKey(date)) || "";
   }
 
-  function nationalHoliday(date) {
+  function holidayFromEntries(date, entries, scope) {
+    const monthDay = `${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+    const match = entries.find((entry) => entry.date === monthDay);
+    return match ? { name: match.name, scope, legalBasis: match.legalBasis } : null;
+  }
+
+  function automaticHoliday(date, options) {
+    const national = holidayFromEntries(date, holidayData.national, "nacional");
+    if (national) return national;
+    const stateHoliday = holidayFromEntries(date, holidayData.state[options.stateCode] || [], "estadual");
+    if (stateHoliday) return stateHoliday;
+    const municipalityKey = `${options.municipality}|${options.stateCode}`;
+    const municipalHoliday = holidayFromEntries(date, holidayData.municipalities[municipalityKey] || [], "municipal");
+    if (municipalHoliday) return municipalHoliday;
+
+    if (options.stateCode === "ES" && toKey(date) === toKey(addDays(easterSunday(date.getUTCFullYear()), 8))) {
+      return { name: "Nossa Senhora da Penha", scope: "estadual", legalBasis: "Lei estadual 11.010/2019" };
+    }
+    return null;
+  }
+
+  function federalCourtHoliday(date) {
     const monthDay = `${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
     return {
-      "01-01": "Confraternização Universal",
-      "04-21": "Tiradentes",
-      "05-01": "Dia do Trabalho",
-      "09-07": "Independência do Brasil",
-      "10-12": "Nossa Senhora Aparecida",
-      "11-02": "Finados",
-      "11-15": "Proclamação da República",
-      "11-20": "Dia da Consciência Negra",
-      "12-25": "Natal"
+      "08-11": "Criação dos cursos jurídicos — Justiça Federal",
+      "11-01": "Todos os Santos — Justiça Federal",
+      "12-08": "Dia da Justiça — Justiça Federal"
     }[monthDay] || "";
   }
 
@@ -329,28 +377,68 @@
   function classify(date, options) {
     const key = toKey(date);
     const weekDay = date.getUTCDay();
-    if (customDates.has(key)) return { blocked: true, kind: "paused", reason: customDates.get(key), suspension: true };
+    if (customDates.has(key)) {
+      const custom = customDates.get(key);
+      return {
+        blocked: true,
+        kind: custom.type === "suspension" ? "suspension" : "holiday",
+        reason: custom.label,
+        suspendsContinuous: custom.type === "suspension",
+        source: "Data adicionada manualmente"
+      };
+    }
     if (options.useRecess && isCourtRecess(date)) {
-      return { blocked: true, kind: "paused", reason: "Suspensão de prazos (20/12 a 20/01)", suspension: true };
+      return {
+        blocked: true,
+        kind: "suspension",
+        reason: "Suspensão legal dos prazos (20/12 a 20/01)",
+        suspendsContinuous: true,
+        source: options.matter === "criminal"
+          ? "CPP, art. 798-A"
+          : (options.matter === "labor" ? "CNJ, Resolução 244/2016" : "CPC, art. 220")
+      };
     }
     if (options.useCommonDates) {
-      const commonDate = movableCourtDate(date);
-      if (commonDate) return { blocked: true, kind: "paused", reason: commonDate, suspension: true };
+      const commonDate = movableCourtDate(date, options.federalCourt);
+      if (commonDate) {
+        return {
+          blocked: true,
+          kind: "court-closure",
+          reason: `${commonDate} — sem expediente presumido`,
+          suspendsContinuous: false,
+          source: options.federalCourt ? "Lei 5.010/1966 e calendário forense" : "Calendário forense a confirmar"
+        };
+      }
     }
-    const holiday = nationalHoliday(date);
-    if (holiday) return { blocked: true, kind: "paused", reason: holiday, suspension: false };
+    if (options.federalCourt) {
+      const courtHoliday = federalCourtHoliday(date);
+      if (courtHoliday) {
+        return { blocked: true, kind: "court-closure", reason: courtHoliday, suspendsContinuous: false, source: "Lei 5.010/1966, art. 62" };
+      }
+    }
+    const holiday = automaticHoliday(date, options);
+    if (holiday) {
+      return {
+        blocked: true,
+        kind: "holiday",
+        reason: `${holiday.name} — feriado ${holiday.scope}`,
+        suspendsContinuous: false,
+        source: holiday.legalBasis
+      };
+    }
     if (weekDay === 0 || weekDay === 6) {
-      return { blocked: true, kind: "weekend", reason: weekDay === 6 ? "Sábado" : "Domingo", suspension: false };
+      return { blocked: true, kind: "weekend", reason: weekDay === 6 ? "Sábado" : "Domingo", suspendsContinuous: false, source: "" };
     }
-    return { blocked: false, kind: "business", reason: "Dia útil", suspension: false };
+    return { blocked: false, kind: "business", reason: "Dia útil", suspendsContinuous: false, source: "" };
   }
 
   function calculate(start, days, mode, options) {
-    const entries = [{ date: start, reason: "Data da publicação — excluída", status: "skipped", number: null }];
+    const entries = [{ date: start, reason: "Termo inicial informado — excluído da contagem", status: "initial", number: null, source: "CPC, art. 224; CLT, art. 775; CPP, art. 798, § 1º" }];
     let cursor = start;
     let counted = 0;
-    let weekends = 0;
-    let paused = 0;
+    let excludedWeekends = 0;
+    let excludedHolidays = 0;
+    let excludedSuspensions = 0;
     let safety = 0;
 
     while (counted < days && safety < 4000) {
@@ -360,24 +448,25 @@
 
       if (mode === "business") {
         if (day.blocked) {
-          day.kind === "weekend" ? weekends++ : paused++;
-          entries.push({ date: cursor, reason: day.reason, status: "skipped", number: null });
+          if (day.kind === "weekend") excludedWeekends++;
+          else if (day.kind === "suspension") excludedSuspensions++;
+          else excludedHolidays++;
+          entries.push({ date: cursor, reason: day.reason, status: "excluded", number: null, source: day.source });
         } else {
           counted++;
-          entries.push({ date: cursor, reason: "Dia útil", status: "counted", number: counted });
+          entries.push({ date: cursor, reason: "Dia útil computado", status: "counted", number: counted, source: "" });
         }
-      } else if (day.suspension) {
-        paused++;
-        entries.push({ date: cursor, reason: day.reason, status: "skipped", number: null });
+      } else if (day.suspendsContinuous) {
+        excludedSuspensions++;
+        entries.push({ date: cursor, reason: day.reason, status: "excluded", number: null, source: day.source });
       } else {
         counted++;
-        if (day.kind === "weekend") weekends++;
-        if (day.kind === "paused") paused++;
         entries.push({
           date: cursor,
-          reason: day.blocked ? `${day.reason} — computado em dias corridos` : "Dia corrido",
+          reason: day.blocked ? `${day.reason} — computado por ser prazo contínuo` : "Dia corrido computado",
           status: "counted",
-          number: counted
+          number: counted,
+          source: day.source
         });
       }
     }
@@ -385,19 +474,39 @@
     if (mode === "calendar") {
       let terminal = classify(cursor, options);
       while (terminal.blocked && safety < 4000) {
+        if (entries.at(-1)?.date.getTime() === cursor.getTime()) {
+          entries.at(-1).reason += " — vencimento indisponível, prorrogado";
+          entries.at(-1).status = "extended";
+          entries.at(-1).number = counted;
+        }
         cursor = addDay(cursor);
         safety++;
         terminal = classify(cursor, options);
-        if (terminal.blocked) terminal.kind === "weekend" ? weekends++ : paused++;
+        if (terminal.blocked) {
+          if (terminal.kind === "weekend") excludedWeekends++;
+          else if (terminal.kind === "suspension") excludedSuspensions++;
+          else excludedHolidays++;
+        }
         entries.push({
           date: cursor,
-          reason: terminal.blocked ? `${terminal.reason} — vencimento prorrogado` : "Primeiro dia útil após a prorrogação",
-          status: terminal.blocked ? "skipped" : "counted",
-          number: null
+          reason: terminal.blocked ? `${terminal.reason} — prorrogação continua` : "Primeiro dia útil após a prorrogação",
+          status: terminal.blocked ? "extended" : "due",
+          number: null,
+          source: terminal.source
         });
       }
     }
-    return { dueDate: cursor, counted, weekends, paused, entries };
+    const elapsed = Math.round((cursor.getTime() - start.getTime()) / 86400000);
+    return {
+      dueDate: cursor,
+      counted,
+      elapsed,
+      excludedWeekends,
+      excludedHolidays,
+      excludedSuspensions,
+      excluded: excludedWeekends + excludedHolidays + excludedSuspensions,
+      entries
+    };
   }
 
   function renderTimeline(entries) {
@@ -408,18 +517,59 @@
       const row = document.createElement("div");
       row.className = "timeline-row";
       const date = document.createElement("span");
-      date.textContent = formatShort(entry.date);
+      date.innerHTML = `<strong>${formatShort(entry.date)}</strong><small>${capitalize(weekday(entry.date))}</small>`;
       const reason = document.createElement("span");
       reason.textContent = entry.reason;
+      if (entry.source) {
+        const source = document.createElement("small");
+        source.textContent = entry.source;
+        reason.append(source);
+      }
       const status = document.createElement("span");
       status.className = `timeline-status ${entry.status}`;
-      status.textContent = entry.status === "counted"
-        ? (entry.number ? `${entry.number}º dia` : "Vencimento")
-        : "Não contado";
+      status.textContent = {
+        counted: entry.number ? `${entry.number}º dia` : "Contado",
+        initial: "Excluído",
+        excluded: "Não contado",
+        extended: entry.number ? `${entry.number}º + prorrogação` : "Prorrogado",
+        due: "Vencimento"
+      }[entry.status] || "Não contado";
       row.append(date, reason, status);
       fragment.append(row);
     }
     timeline.append(fragment);
+  }
+
+  function renderBreakdown(calculation, start, mode, options) {
+    const summary = document.querySelector("#breakdown-summary");
+    summary.replaceChildren();
+    const firstCounted = calculation.entries.find((entry) => entry.status === "counted");
+    const rows = [
+      ["Termo inicial excluído", formatShort(start)],
+      ["Início efetivo da contagem", firstCounted ? formatShort(firstCounted.date) : "—"],
+      ["Regra aplicada", mode === "business" ? "Somente dias úteis" : "Dias corridos, com suspensão legal e prorrogação do vencimento"],
+      ["Fins de semana não contados", String(calculation.excludedWeekends)],
+      ["Feriados / dias sem expediente não contados", String(calculation.excludedHolidays)],
+      ["Dias de suspensão não contados", String(calculation.excludedSuspensions)],
+      ["Data final estimada", `${capitalize(weekday(calculation.dueDate))}, ${formatLong(calculation.dueDate)}`]
+    ];
+
+    const heading = document.createElement("h4");
+    heading.textContent = "Resumo da contagem";
+    const grid = document.createElement("dl");
+    for (const [label, value] of rows) {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = value;
+      grid.append(term, description);
+    }
+    const ruleNote = document.createElement("p");
+    ruleNote.className = "breakdown-rule";
+    ruleNote.textContent = options.matter === "criminal"
+      ? "Perfil criminal: contagem contínua conforme o CPP. Fins de semana e feriados intermediários são computados; a suspensão de 20/12 a 20/01 é aplicada, ressalvadas as exceções do art. 798-A."
+      : `Perfil ${options.matter === "labor" ? "trabalhista" : "cível"}: contam-se apenas dias úteis, excluindo dias sem expediente e suspensões selecionadas.`;
+    summary.append(heading, grid, ruleNote);
   }
 
   function clearValidation() {
@@ -476,7 +626,11 @@
     const mode = new FormData(form).get("countMode");
     const options = {
       useRecess: document.querySelector("#court-recess").checked,
-      useCommonDates: document.querySelector("#common-court-dates").checked
+      useCommonDates: document.querySelector("#common-court-dates").checked,
+      stateCode: stateSelect.value,
+      municipality: selectedMunicipalityName,
+      matter: matterSelect.value,
+      federalCourt: /^(STF|STJ|TST|STM|TSE|TRF)/.test(selectedText(courtSelect))
     };
     const context = calculationContext();
     const calculation = calculate(start, days, mode, options);
@@ -486,8 +640,8 @@
     document.querySelector("#result-summary").textContent =
       `${days} ${mode === "business" ? "dias úteis" : "dias corridos"} a partir da publicação de ${formatShort(start)} · dia inicial excluído`;
     document.querySelector("#stat-counted").textContent = calculation.counted;
-    document.querySelector("#stat-weekends").textContent = calculation.weekends;
-    document.querySelector("#stat-paused").textContent = calculation.paused;
+    document.querySelector("#stat-elapsed").textContent = calculation.elapsed;
+    document.querySelector("#stat-excluded").textContent = calculation.excluded;
 
     const contextBox = document.querySelector("#result-context");
     contextBox.replaceChildren();
@@ -496,6 +650,7 @@
       chip.textContent = value;
       contextBox.append(chip);
     });
+    renderBreakdown(calculation, start, mode, options);
     renderTimeline(calculation.entries);
 
     lastResultText = `Prazo Fácil: vencimento estimado em ${formatLong(calculation.dueDate)}. ${days} ${mode === "business" ? "dias úteis" : "dias corridos"}; publicação em ${formatShort(start)}; ${context.matter}; ${context.process}; ${context.municipality}/${context.stateCode}; ${context.court}; ${context.unit}. Confira no calendário oficial do tribunal.`;
@@ -507,11 +662,15 @@
   document.querySelector("#add-holiday").addEventListener("click", () => {
     const dateInput = document.querySelector("#custom-holiday");
     const labelInput = document.querySelector("#custom-label");
+    const typeInput = document.querySelector("#custom-date-type");
     if (!dateInput.value) {
       dateInput.focus();
       return;
     }
-    customDates.set(dateInput.value, labelInput.value.trim() || "Feriado ou suspensão local");
+    customDates.set(dateInput.value, {
+      label: labelInput.value.trim() || (typeInput.value === "suspension" ? "Suspensão local do prazo" : "Feriado ou dia sem expediente"),
+      type: typeInput.value
+    });
     renderHolidayChips();
     dateInput.value = "";
     labelInput.value = "";
@@ -520,13 +679,13 @@
   function renderHolidayChips() {
     const container = document.querySelector("#holiday-chips");
     container.replaceChildren();
-    for (const [date, label] of [...customDates].sort()) {
+    for (const [date, custom] of [...customDates].sort()) {
       const chip = document.createElement("span");
       chip.className = "holiday-chip";
-      chip.append(document.createTextNode(`${formatShort(fromKey(date))} · ${label}`));
+      chip.append(document.createTextNode(`${formatShort(fromKey(date))} · ${custom.label} · ${custom.type === "suspension" ? "suspensão" : "feriado"}`));
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.setAttribute("aria-label", `Remover ${label} em ${formatShort(fromKey(date))}`);
+      remove.setAttribute("aria-label", `Remover ${custom.label} em ${formatShort(fromKey(date))}`);
       remove.textContent = "×";
       remove.addEventListener("click", () => {
         customDates.delete(date);

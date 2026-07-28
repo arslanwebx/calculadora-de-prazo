@@ -73,18 +73,31 @@ try {
       court.dispatchEvent(new Event('change', { bubbles: true }));
       const unit = document.querySelector('#court-unit');
       unit.selectedIndex = 1;
-      const run = async (start, days) => {
+      const run = async (start, days, mode = 'business', courtIndex = 1, matter = 'civil') => {
+        document.querySelector('#case-type').value = matter;
+        document.querySelector('#case-type').dispatchEvent(new Event('change', { bubbles: true }));
+        court.selectedIndex = courtIndex;
+        court.dispatchEvent(new Event('change', { bubbles: true }));
+        unit.selectedIndex = 1;
         document.querySelector('#start-date').value = start;
         document.querySelector('#days').value = days;
-        document.querySelector('#business').checked = true;
+        document.querySelector(mode === 'business' ? '#business' : '#calendar-days').checked = true;
         document.querySelector('#court-recess').checked = true;
         document.querySelector('#deadline-form').requestSubmit();
         await new Promise(resolve => setTimeout(resolve, 50));
-        return document.querySelector('#result-date').textContent;
+        return {
+          date: document.querySelector('#result-date').textContent,
+          breakdown: document.querySelector('#breakdown-summary').textContent,
+          timeline: document.querySelector('#timeline').textContent
+        };
       };
       return {
         standard: await run('2026-07-28', 15),
         nationalHoliday: await run('2026-09-04', 1),
+        stateHoliday: await run('2026-07-08', 1),
+        municipalHoliday: await run('2027-01-22', 1),
+        federalCourtHoliday: await run('2026-08-10', 1, 'business', 2),
+        criminalContinuous: await run('2026-09-04', 3, 'calendar', 1, 'criminal'),
         courtRecess: await run('2026-12-18', 1)
       };
     })()
@@ -101,13 +114,48 @@ try {
   const expected = {
     standard: "18 de agosto de 2026",
     nationalHoliday: "08 de setembro de 2026",
+    stateHoliday: "10 de julho de 2026",
+    municipalHoliday: "26 de janeiro de 2027",
+    federalCourtHoliday: "12 de agosto de 2026",
+    criminalContinuous: "08 de setembro de 2026",
     courtRecess: "21 de janeiro de 2027"
   };
 
   for (const [caseName, expectedDate] of Object.entries(expected)) {
-    if (actual[caseName] !== expectedDate) {
-      throw new Error(`${caseName}: expected "${expectedDate}", received "${actual[caseName]}"`);
+    if (actual[caseName].date !== expectedDate) {
+      throw new Error(`${caseName}: expected "${expectedDate}", received "${actual[caseName].date}"`);
     }
+  }
+  if (!actual.stateHoliday.timeline.includes("Revolução Constitucionalista") ||
+      !actual.municipalHoliday.timeline.includes("Aniversário de São Paulo") ||
+      !actual.federalCourtHoliday.timeline.includes("Criação dos cursos jurídicos")) {
+    throw new Error("Automatic holiday sources are missing from the day-by-day breakdown");
+  }
+  if (!actual.criminalContinuous.breakdown.includes("contagem contínua") ||
+      !actual.criminalContinuous.timeline.includes("computado por ser prazo contínuo")) {
+    throw new Error("Criminal continuous-day profile or breakdown is incorrect");
+  }
+
+  await call("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true
+  });
+  await call("Page.navigate", { url: "http://127.0.0.1:4173/" });
+  await wait(700);
+  const mobileResponse = await call("Runtime.evaluate", {
+    expression: `({
+      viewport: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      cardWidth: Math.round(document.querySelector('.calculator-card').getBoundingClientRect().width),
+      cardRight: Math.round(document.querySelector('.calculator-card').getBoundingClientRect().right)
+    })`,
+    returnByValue: true
+  });
+  const mobile = mobileResponse.result.value;
+  if (mobile.viewport !== 390 || mobile.documentWidth > 390 || mobile.cardRight > 390 || mobile.cardWidth < 340) {
+    throw new Error(`Mobile layout overflow: ${JSON.stringify(mobile)}`);
   }
 
   await call("Page.navigate", { url: "http://127.0.0.1:4173/contato/" });
