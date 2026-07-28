@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 52" role="img" aria-labelledby="title">
+  <title id="title">Prazo Fácil</title>
+  <g fill="none" fill-rule="evenodd">
+    <rect width="48" height="48" x="2" y="2" rx="15" fill="#164B3F"/>
+    <path fill="#FFF" d="M15 14.5h22a2 2 0 0 1 2 2V37a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2V16.5a2 2 0 0 1 2-2Z"/>
+    <path fill="#F37258" d="M13 20h26v5H13z"/>
+    <path stroke="#164B3F" stroke-linecap="round" stroke-width="3" d="M20 11v7m12-7v7"/>
+    <path stroke="#164B3F" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m20.5 31 3.5 3.5 8-8"/>
+    <text x="62" y="34" fill="#15352E" font-family="Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="-.5">Prazo Fácil</text>
+  </g>
+</svg>
