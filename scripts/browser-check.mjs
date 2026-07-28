@@ -93,7 +93,66 @@ try {
       throw new Error(`${caseName}: expected "${expectedDate}", received "${actual[caseName]}"`);
     }
   }
-  console.log("Browser interaction and deadline calculations passed.");
+
+  await call("Page.navigate", { url: "http://127.0.0.1:4173/contato/" });
+  await wait(700);
+  const contactResponse = await call("Runtime.evaluate", {
+    expression: `
+      (async () => {
+        for (let i = 0; i < 40 && document.querySelector('#contact-form')?.dataset.ready !== 'true'; i++) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        let request;
+        window.fetch = async (url, options) => {
+          request = { url, options };
+          return { ok: true, json: async () => ({ success: true }) };
+        };
+        document.querySelector('#contact-name').value = 'Maria Silva';
+        document.querySelector('#contact-email').value = 'maria@example.com';
+        document.querySelector('#contact-message').value = 'Mensagem de teste do formulário.';
+        document.querySelector('#contact-form').requestSubmit();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const success = {
+          url: request.url,
+          payload: JSON.parse(request.options.body),
+          status: document.querySelector('#contact-status').textContent,
+          nameAfterSubmit: document.querySelector('#contact-name').value
+        };
+
+        window.fetch = async () => ({ ok: false, json: async () => ({}) });
+        document.querySelector('#contact-name').value = 'João Souza';
+        document.querySelector('#contact-email').value = 'joao@example.com';
+        document.querySelector('#contact-message').value = 'Esta mensagem deve ser preservada.';
+        document.querySelector('#contact-form').requestSubmit();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return {
+          success,
+          failureStatus: document.querySelector('#contact-status').textContent,
+          failureMessage: document.querySelector('#contact-message').value
+        };
+      })()
+    `,
+    awaitPromise: true,
+    returnByValue: true
+  });
+  if (contactResponse.exceptionDetails) {
+    throw new Error(contactResponse.exceptionDetails.exception?.description || contactResponse.exceptionDetails.text);
+  }
+  const contact = contactResponse.result.value;
+  if (contact.success.url !== "https://formsubmit.co/ajax/contato@calculadoradeprazo.pro") {
+    throw new Error("Contact form used the wrong endpoint");
+  }
+  if (contact.success.payload._subject !== "Novo contato — Calculadora de Prazo") {
+    throw new Error("Contact form used the wrong subject");
+  }
+  if (!contact.success.status.includes("sucesso") || contact.success.nameAfterSubmit) {
+    throw new Error("Contact success behavior failed");
+  }
+  if (!contact.failureStatus.includes("Não foi possível") || contact.failureMessage !== "Esta mensagem deve ser preservada.") {
+    throw new Error("Contact failure behavior failed");
+  }
+
+  console.log("Browser calculator and AJAX contact-form checks passed.");
   socket.close();
 } finally {
   browser.kill();
