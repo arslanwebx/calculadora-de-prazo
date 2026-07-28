@@ -7,6 +7,7 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
     "check:browser": "node scripts/browser-check.mjs",
-    "preview": "node scripts/serve.mjs"
+    "preview": "node scripts/serve.mjs",
+    "sync:data": "node scripts/sync-calculator-data.mjs"
   }
 }

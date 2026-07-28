@@ -176,7 +176,7 @@ svg { display: block; }
 
 .calculator-card {
   overflow: hidden;
-  max-width: 940px;
+  max-width: 1040px;
   margin: 0 auto;
   background: var(--white);
   border: 1px solid rgba(21, 61, 52, .1);
@@ -238,7 +238,7 @@ svg { display: block; }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1.45fr .7fr 1.35fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px 20px;
 }
 
@@ -282,6 +282,89 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(29, 97, 81, .13);
 }
 input:user-invalid { border-color: #b73e33; }
+.field-invalid input,
+.field-invalid select,
+.field-invalid .combobox > input { border-color: #b73e33; }
+
+.combobox { position: relative; }
+.combobox::after {
+  position: absolute;
+  top: 20px;
+  right: 15px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid #61736d;
+  border-bottom: 2px solid #61736d;
+  content: "";
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+.combobox > input[type="search"] {
+  padding-right: 38px;
+  appearance: none;
+}
+.combobox > input[type="search"]::-webkit-search-cancel-button { display: none; }
+.combobox-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: 265px;
+  overflow-y: auto;
+  padding: 6px;
+  background: white;
+  border: 1px solid #cdd8d3;
+  border-radius: 11px;
+  box-shadow: 0 18px 40px rgba(21, 61, 52, .16);
+}
+.combobox-option,
+.combobox-empty {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: left;
+}
+.combobox-option { cursor: pointer; }
+.combobox-option:hover,
+.combobox-option.active {
+  color: var(--green-950);
+  background: var(--green-50);
+}
+.combobox-option small {
+  display: inline;
+  margin: 0 0 0 7px;
+  color: var(--muted);
+}
+.combobox-empty { color: var(--muted); }
+.custom-unit-input { margin-top: 8px; }
+
+.calculator-data-note {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 10px 12px;
+  color: var(--green-800);
+  background: var(--green-50);
+  border-radius: 10px;
+  font-size: 11px;
+}
+.calculator-data-note svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
 
 .input-with-icon { position: relative; }
 .input-with-icon input { padding-right: 44px; }
@@ -505,6 +588,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   line-height: 1.25;
 }
 #result-summary { margin: 0; color: #bcd2ca; font-size: 12px; }
+.result-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 19px;
+}
+.result-context span {
+  padding: 5px 8px;
+  color: #dce9e4;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 999px;
+  font-size: 10px;
+}
 .result-actions { display: flex; gap: 10px; align-items: center; }
 .icon-button, .text-button {
   color: white;

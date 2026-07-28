@@ -57,6 +57,22 @@ try {
       for (let i = 0; i < 40 && document.querySelector('#deadline-form')?.dataset.ready !== 'true'; i++) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      const state = document.querySelector('#state');
+      state.value = 'SP';
+      state.dispatchEvent(new Event('change', { bubbles: true }));
+      const municipality = document.querySelector('#municipality-search');
+      municipality.value = 'São Paulo';
+      municipality.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      municipality.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      document.querySelector('#case-type').value = 'civil';
+      document.querySelector('#case-type').dispatchEvent(new Event('change', { bubbles: true }));
+      document.querySelector('#process-type').value = 'electronic';
+      const court = document.querySelector('#court');
+      court.selectedIndex = 1;
+      court.dispatchEvent(new Event('change', { bubbles: true }));
+      const unit = document.querySelector('#court-unit');
+      unit.selectedIndex = 1;
       const run = async (start, days) => {
         document.querySelector('#start-date').value = start;
         document.querySelector('#days').value = days;

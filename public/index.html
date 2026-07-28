@@ -152,67 +152,115 @@
 
             <form id="deadline-form" novalidate>
               <div class="form-grid">
+                <div class="field">
+                  <label for="state">Estado</label>
+                  <select id="state" name="state" required>
+                    <option value="">Selecione...</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="municipality-search">Município</label>
+                  <div class="combobox" id="municipality-combobox">
+                    <input id="municipality-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="municipality-list" autocomplete="off" placeholder="Selecione o estado primeiro" disabled>
+                    <input id="municipality" name="municipality" type="hidden">
+                    <div id="municipality-list" class="combobox-list" role="listbox" hidden></div>
+                  </div>
+                  <small id="municipality-help">Base oficial completa do IBGE</small>
+                </div>
+
+                <div class="field">
+                  <label for="case-type">Matéria</label>
+                  <select id="case-type" name="caseType" required>
+                    <option value="">Selecione...</option>
+                    <option value="civil">Cível</option>
+                    <option value="criminal">Criminal</option>
+                    <option value="labor">Trabalhista</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="process-type">Processo</label>
+                  <select id="process-type" name="processType" required>
+                    <option value="">Selecione...</option>
+                    <option value="electronic">Eletrônico</option>
+                    <option value="physical">Físico</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="court">Tribunal</label>
+                  <select id="court" name="court" disabled required>
+                    <option value="">Selecione estado e município...</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="court-unit">Vara / Unidade Judiciária</label>
+                  <select id="court-unit" name="courtUnit" disabled required>
+                    <option value="">Selecione matéria e tribunal...</option>
+                  </select>
+                  <input id="custom-court-unit" class="custom-unit-input" type="text" maxlength="120" placeholder="Digite a unidade judiciária" aria-label="Outra Vara ou Unidade Judiciária" hidden>
+                </div>
+
                 <div class="field field-wide-mobile">
-                  <label for="start-date">Data inicial</label>
+                  <label for="start-date">Data da Publicação</label>
                   <div class="input-with-icon">
                     <input id="start-date" name="startDate" type="date" required aria-describedby="start-help">
                     <svg aria-hidden="true"><use href="#calendar"></use></svg>
                   </div>
-                  <small id="start-help">Data da ciência, publicação ou termo inicial</small>
+                  <small id="start-help">A contagem começa no primeiro dia aplicável após esta data</small>
                 </div>
 
                 <div class="field">
-                  <label for="days">Prazo</label>
+                  <label for="days">Prazo (Dias)</label>
                   <div class="number-control">
-                    <input id="days" name="days" type="number" min="1" max="999" value="15" inputmode="numeric" required>
+                    <input id="days" name="days" type="number" min="1" max="365" value="15" inputmode="numeric" required>
                     <span>dias</span>
                   </div>
                 </div>
 
                 <fieldset class="field count-field">
-                  <legend>Forma de contagem</legend>
+                  <legend>Contagem</legend>
                   <div class="segmented">
                     <input id="business" type="radio" name="countMode" value="business" checked>
-                    <label for="business">Dias úteis</label>
+                    <label for="business">Úteis</label>
                     <input id="calendar-days" type="radio" name="countMode" value="calendar">
-                    <label for="calendar-days">Dias corridos</label>
+                    <label for="calendar-days">Corridos</label>
                   </div>
                 </fieldset>
+              </div>
 
-                <div class="field">
-                  <label for="case-type">Tipo de processo</label>
-                  <select id="case-type" name="caseType">
-                    <option value="civil">Cível (CPC)</option>
-                    <option value="labor">Trabalhista</option>
-                    <option value="criminal">Criminal</option>
-                    <option value="other">Outro / prazo material</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="court">Órgão julgador</label>
-                  <select id="court" name="court">
-                    <option value="state">Justiça Estadual</option>
-                    <option value="federal">Justiça Federal</option>
-                    <option value="labor">Justiça do Trabalho</option>
-                    <option value="superior">Tribunal Superior</option>
-                    <option value="other">Outro órgão</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="state">UF</label>
-                  <select id="state" name="state">
-                    <option value="">Selecione</option>
-                    <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
-                    <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
-                    <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
-                    <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
-                    <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-                    <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
-                    <option>SP</option><option>SE</option><option>TO</option>
-                  </select>
-                </div>
+              <div class="calculator-data-note">
+                <svg aria-hidden="true"><use href="#info"></use></svg>
+                <span><strong>5.571 municípios</strong> do cadastro oficial do IBGE e tribunais filtrados por estado.</span>
               </div>
 
               <details class="advanced-options">
@@ -234,7 +282,11 @@
                     <input id="court-recess" name="courtRecess" type="checkbox" checked>
                     <span>Suspender a contagem de 20 de dezembro a 20 de janeiro</span>
                   </label>
-                  <p class="advanced-note"><svg aria-hidden="true"><use href="#info"></use></svg> Feriados estaduais, municipais e atos específicos do tribunal precisam ser adicionados acima.</p>
+                  <label class="check-control">
+                    <input id="common-court-dates" name="commonCourtDates" type="checkbox" checked>
+                    <span>Considerar suspensões móveis comuns: Carnaval, Paixão de Cristo e Corpus Christi</span>
+                  </label>
+                  <p class="advanced-note"><svg aria-hidden="true"><use href="#info"></use></svg> Feriados nacionais e o recesso são automáticos. Adicione acima feriados estaduais, municipais ou suspensões específicas confirmadas no calendário do tribunal.</p>
                 </div>
               </details>
 
@@ -258,9 +310,14 @@
                     <svg aria-hidden="true"><use href="#copy"></use></svg>
                     <span>Copiar</span>
                   </button>
+                  <button id="download-calendar" class="icon-button" type="button">
+                    <svg aria-hidden="true"><use href="#calendar"></use></svg>
+                    <span>Agenda</span>
+                  </button>
                   <button id="new-calculation" class="text-button" type="button">Novo cálculo</button>
                 </div>
               </div>
+              <div id="result-context" class="result-context"></div>
               <div class="result-stats">
                 <div><strong id="stat-counted">0</strong><span>dias contados</span></div>
                 <div><strong id="stat-weekends">0</strong><span>fins de semana</span></div>
